@@ -1,0 +1,19 @@
+* {
+  font-family: 'Noto Sans JP';
+  font-style: normal;
+  font-weight: normal;
+  padding: 0px;
+  margin: 0px;
+}
+
+::-webkit-input-placeholder { /* Edge */
+  color: #999999;
+}
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: #999999;
+}
+
+::placeholder {
+  color: #999999;
+}
