@@ -27,11 +27,27 @@ commands:
 
   test-app:
     steps:
+      # - run:
+      #     name: Run test
+      #     command: |
+      #       circleci tests glob "src/**/*.test.js" "src/**/*.test.ts" | circleci tests split > /tmp/tests-to-run
+      #       yarn test $(cat /tmp/tests-to-run)
+      # - run:
+      #     name: Create test-results folder
+      #     command: |
+      #       mkdir test-results
       - run:
-          name: Run test
-          command: |
-            circleci tests glob "src/**/*.test.js" "src/**/*.test.ts" | circleci tests split > /tmp/tests-to-run
-            yarn test $(cat /tmp/tests-to-run)
+          name: Run tests with JUnit as reporter
+          command: yarn test --ci --runInBand --reporters=default --reporters=jest-junit
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/junit/
+      - store_test_results:
+          path: ./reports/junit/
+      - store_artifacts:
+          path: ./reports/junit
+      # - store_test_results:
+      #     path: test-results
+
 executors:
   node-executor:
     docker:
