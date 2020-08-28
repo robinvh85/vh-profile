@@ -1,0 +1,64 @@
+version: 2.1
+
+commands:
+  setup-dependency:
+    steps:
+      - restore_cache: # special step to restore the dependency cache
+          key: dependency-cache-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+      - run:
+          name: Setup Dependencies
+          command: yarn install
+      - save_cache: # special step to save the dependency cache
+          key: dependency-cache-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+          paths:
+            - ./node_modules
+
+  setup-environment:
+    steps:
+      - run:
+          name: Setup env
+          command: |
+            export NODE_ENV="test";
+  build-app:
+    steps:
+      - run:
+          name: Run build app
+          command: yarn build
+
+  test-app:
+    steps:
+      - run:
+          name: Run test
+          command: |
+            circleci tests glob "src/**/*.test.js" "src/**/*.test.ts" | circleci tests split > /tmp/tests-to-run
+            yarn test $(cat /tmp/tests-to-run)
+executors:
+  node-executor:
+    docker:
+      - image: circleci/node:14
+        environment:
+          NODE_OPTIONS=--max-old-space-size=4096
+    working_directory: ~/repo
+
+jobs:
+  build:
+    executor: node-executor
+    steps:
+      - checkout
+      - setup-dependency
+      - setup-environment
+      - build-app
+  test:
+    executor: node-executor
+    # parallelism: 2
+    steps:
+      - checkout
+      - setup-dependency
+      - setup-environment
+      - test-app
+
+workflows:
+  build_and_test:
+    jobs:
+      - build
+      - test
