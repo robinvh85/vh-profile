@@ -4,12 +4,12 @@ commands:
   setup-dependency:
     steps:
       - restore_cache: # special step to restore the dependency cache
-          key: dependency-cache-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+          key: dependency-cache-{{ checksum "yarn.lock" }}
       - run:
           name: Setup Dependencies
-          command: yarn install
+          command: yarn install --frozen-lockfile
       - save_cache: # special step to save the dependency cache
-          key: dependency-cache-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+          key: dependency-cache-{{ checksum "yarn.lock" }}
           paths:
             - ./node_modules
 
@@ -28,14 +28,22 @@ commands:
   test-app:
     steps:
       - run:
-          name: Run test
+          name: Run tests
           command: |
-            circleci tests glob "src/**/*.test.js" "src/**/*.test.ts" | circleci tests split > /tmp/tests-to-run
-            yarn test $(cat /tmp/tests-to-run)
+            circleci tests glob "src/**/*.test.tsx" | circleci tests split > /tmp/tests-to-run
+            yarn test $(cat /tmp/tests-to-run) --coverage --ci --runInBand --reporters=default --reporters=jest-junit
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/junit/
+      - store_test_results:
+          path: ./reports/junit/
+      - store_artifacts:
+          path: ./coverage/lcov-report
+          destination: coverage
+
 executors:
   node-executor:
     docker:
-      - image: circleci/node:14
+      - image: cimg/node:14.9
         environment:
           NODE_OPTIONS=--max-old-space-size=4096
     working_directory: ~/repo
@@ -50,7 +58,7 @@ jobs:
       - build-app
   test:
     executor: node-executor
-    # parallelism: 2
+    parallelism: 2
     steps:
       - checkout
       - setup-dependency

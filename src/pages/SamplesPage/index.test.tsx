@@ -3,16 +3,16 @@ import configureStore from 'redux-mock-store';
 import { shallow } from 'enzyme';
 import { Map } from 'immutable';
 
-import HomePage from '.';
+import SamplesPage from '.';
 
 const mockStore = configureStore();
 let state = Map({});
 const store = mockStore(() => state);
 
-describe('<HomePage />', () => {
+describe('<SamplesPage />', () => {
   it('should render', () => {
     const wrapper = shallow(
-      <HomePage store={store} />
+      <SamplesPage store={store} />
     )
 
     expect(wrapper).toBeDefined();
